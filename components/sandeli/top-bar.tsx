@@ -14,7 +14,7 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex items-center justify-between bg-background/95 px-4 py-3 backdrop-blur-md safe-top">
+      <header className="sticky top-0 z-40 flex items-center justify-between bg-background/95 px-6 py-4 backdrop-blur-md safe-top">
         {/* Logo */}
         <Image
           src="/images/logo.png"
@@ -25,11 +25,14 @@ export function TopBar() {
         />
 
         <div className="flex items-center gap-3">
-          {/* Points badge */}
+          {/* Points badge with label */}
           <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5">
             <Star className="h-4 w-4 text-primary" fill="currentColor" />
             <span className="text-sm font-bold text-primary">
               {user?.points ?? 0}
+            </span>
+            <span className="text-[10px] font-medium text-primary/70">
+              pts
             </span>
           </div>
 

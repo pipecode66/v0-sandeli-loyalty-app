@@ -1,12 +1,12 @@
 "use client"
 
 import { useApp } from "@/lib/app-context"
-import { Home, Receipt, UtensilsCrossed } from "lucide-react"
+import { Home, Receipt, Gift } from "lucide-react"
 
 const tabs = [
   { key: "home" as const, label: "Inicio", icon: Home },
   { key: "history" as const, label: "Historial", icon: Receipt },
-  { key: "menu" as const, label: "Menu", icon: UtensilsCrossed },
+  { key: "redeemables" as const, label: "Reclamables", icon: Gift },
 ]
 
 export function BottomNav() {

@@ -1,8 +1,9 @@
 "use client"
 
 import { useApp } from "@/lib/app-context"
-import { Copy, Check, TrendingUp, Gift, ChevronRight, LogOut } from "lucide-react"
+import { Copy, Check, Star, Gift, ChevronRight, LogOut } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 const AVATAR_ICONS: Record<string, string> = {
   a1: "🥗",
@@ -14,7 +15,7 @@ const AVATAR_ICONS: Record<string, string> = {
 }
 
 export function HomeTab() {
-  const { user, promotions, setMainTab, logout } = useApp()
+  const { user, products, setMainTab, logout } = useApp()
   const [copied, setCopied] = useState(false)
 
   if (!user) return null
@@ -36,8 +37,10 @@ export function HomeTab() {
     return "Buenas noches"
   }
 
+  const redeemableNow = products.filter((p) => p.pointsCost <= user.points)
+
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-4">
+    <div className="flex-1 overflow-y-auto px-5 pb-4">
       {/* Greeting card */}
       <div className="mb-5 rounded-2xl bg-primary p-5">
         <div className="flex items-center gap-4">
@@ -87,7 +90,7 @@ export function HomeTab() {
       <div className="mb-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-secondary p-4">
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <Star className="h-5 w-5 text-primary" fill="currentColor" />
           </div>
           <p className="text-2xl font-bold text-foreground">{user.points}</p>
           <p className="text-xs text-muted-foreground">Puntos totales</p>
@@ -97,21 +100,21 @@ export function HomeTab() {
             <Gift className="h-5 w-5 text-accent" />
           </div>
           <p className="text-2xl font-bold text-foreground">
-            {promotions.filter((p) => p.pointsCost <= user.points).length}
+            {redeemableNow.length}
           </p>
           <p className="text-xs text-muted-foreground">Canjeables ahora</p>
         </div>
       </div>
 
-      {/* Quick promo preview */}
+      {/* Quick product preview */}
       <div className="mb-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">
-            Promociones destacadas
+            Productos destacados
           </h3>
           <button
             type="button"
-            onClick={() => setMainTab("menu")}
+            onClick={() => setMainTab("redeemables")}
             className="flex items-center gap-1 text-sm font-medium text-primary"
           >
             Ver todo
@@ -120,34 +123,37 @@ export function HomeTab() {
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {promotions.slice(0, 3).map((promo) => (
-            <div
-              key={promo.id}
-              className="min-w-[200px] rounded-2xl border border-border bg-card p-4"
+          {products.slice(0, 4).map((product) => (
+            <button
+              key={product.id}
+              type="button"
+              onClick={() => setMainTab("redeemables")}
+              className="min-w-[160px] rounded-2xl border border-border bg-card p-3 text-left transition-all active:scale-[0.98]"
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-xl">
-                {promo.image === "juice"
-                  ? "🥤"
-                  : promo.image === "bowl"
-                    ? "🥗"
-                    : promo.image === "dessert"
-                      ? "🍨"
-                      : "🍽️"}
+              <div className="relative mb-2 h-24 w-full overflow-hidden rounded-xl bg-secondary">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  sizes="160px"
+                />
               </div>
-              <p className="mb-1 text-sm font-semibold text-foreground">
-                {promo.title}
+              <p className="mb-1 text-sm font-semibold text-foreground leading-tight">
+                {product.name}
               </p>
               <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 text-primary" fill="currentColor" />
                 <span className="text-xs font-bold text-primary">
-                  {promo.pointsCost} pts
+                  {product.pointsCost} pts
                 </span>
-                {promo.pointsCost <= user.points && (
+                {product.pointsCost <= user.points && (
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
                     Disponible
                   </span>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

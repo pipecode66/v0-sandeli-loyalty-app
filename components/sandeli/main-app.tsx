@@ -4,7 +4,7 @@ import { TopBar } from "./top-bar"
 import { BottomNav } from "./bottom-nav"
 import { HomeTab } from "./home-tab"
 import { HistoryTab } from "./history-tab"
-import { MenuTab } from "./menu-tab"
+import { RedeemablesTab } from "./redeemables-tab"
 import { IOSTutorial } from "./ios-tutorial"
 import { useApp } from "@/lib/app-context"
 
@@ -18,7 +18,7 @@ export function MainApp() {
       <main className="flex flex-1 flex-col pt-2">
         {mainTab === "home" && <HomeTab />}
         {mainTab === "history" && <HistoryTab />}
-        {mainTab === "menu" && <MenuTab />}
+        {mainTab === "redeemables" && <RedeemablesTab />}
       </main>
 
       <BottomNav />

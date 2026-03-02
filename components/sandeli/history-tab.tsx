@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/app-context"
-import { Receipt, Star, Calendar } from "lucide-react"
+import { Receipt, Star, Calendar, Heart } from "lucide-react"
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr)
@@ -20,14 +20,32 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
+function getFavoriteDish(purchases: { items: string[] }[]): string {
+  const counts: Record<string, number> = {}
+  for (const p of purchases) {
+    for (const item of p.items) {
+      counts[item] = (counts[item] || 0) + 1
+    }
+  }
+  let maxCount = 0
+  let favorite = ""
+  for (const [item, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count
+      favorite = item
+    }
+  }
+  return favorite || "---"
+}
+
 export function HistoryTab() {
-  const { purchases, user } = useApp()
+  const { purchases } = useApp()
 
   const totalPoints = purchases.reduce((sum, p) => sum + p.pointsEarned, 0)
-  const totalSpent = purchases.reduce((sum, p) => sum + p.total, 0)
+  const favoriteDish = getFavoriteDish(purchases)
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-4">
+    <div className="flex-1 overflow-y-auto px-5 pb-4">
       <h2 className="mb-1 text-xl font-bold text-foreground">
         Historial de compras
       </h2>
@@ -46,10 +64,13 @@ export function HistoryTab() {
           <p className="text-[10px] text-muted-foreground">Pts ganados</p>
         </div>
         <div className="rounded-xl bg-secondary p-3 text-center">
-          <p className="text-lg font-bold text-foreground">
-            {formatCurrency(totalSpent).replace("COP", "").trim()}
+          <div className="flex items-center justify-center gap-1">
+            <Heart className="h-3.5 w-3.5 text-sandeli-magenta" fill="currentColor" />
+          </div>
+          <p className="mt-0.5 text-xs font-bold text-foreground leading-tight">
+            {favoriteDish}
           </p>
-          <p className="text-[10px] text-muted-foreground">Total</p>
+          <p className="text-[10px] text-muted-foreground">Plato favorito</p>
         </div>
       </div>
 

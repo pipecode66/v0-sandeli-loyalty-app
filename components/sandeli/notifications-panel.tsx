@@ -1,8 +1,20 @@
 "use client"
 
 import { useApp } from "@/lib/app-context"
-import { X, Bell, BellDot } from "lucide-react"
-import { useEffect } from "react"
+import { X, Bell, ChevronDown, ChevronUp } from "lucide-react"
+import { useEffect, useState } from "react"
+
+function formatFullDate(dateStr: string) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -20,14 +32,19 @@ interface Props {
 
 export function NotificationsPanel({ onClose }: Props) {
   const { notifications, markNotificationRead } = useApp()
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  // Prevent body scroll when panel is open
   useEffect(() => {
     document.body.style.overflow = "hidden"
     return () => {
       document.body.style.overflow = ""
     }
   }, [])
+
+  const handleToggle = (id: string) => {
+    markNotificationRead(id)
+    setExpandedId((prev) => (prev === id ? null : id))
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col">
@@ -79,41 +96,67 @@ export function NotificationsPanel({ onClose }: Props) {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {notifications.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  onClick={() => markNotificationRead(notification.id)}
-                  className={`w-full rounded-2xl p-4 text-left transition-all active:scale-[0.98] ${
-                    notification.read
-                      ? "bg-secondary"
-                      : "border border-primary/20 bg-primary/5"
-                  }`}
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {!notification.read && (
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                      )}
-                      <span
-                        className={`text-sm font-semibold ${
-                          notification.read
-                            ? "text-foreground"
-                            : "text-primary"
-                        }`}
-                      >
-                        {notification.title}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {timeAgo(notification.date)}
-                    </span>
+              {notifications.map((notification) => {
+                const isExpanded = expandedId === notification.id
+                return (
+                  <div
+                    key={notification.id}
+                    className={`w-full rounded-2xl transition-all ${
+                      notification.read
+                        ? "bg-secondary"
+                        : "border border-primary/20 bg-primary/5"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(notification.id)}
+                      className="w-full p-4 text-left"
+                    >
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {!notification.read && (
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                          )}
+                          <span
+                            className={`text-sm font-semibold ${
+                              notification.read
+                                ? "text-foreground"
+                                : "text-primary"
+                            }`}
+                          >
+                            {notification.title}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">
+                            {timeAgo(notification.date)}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {notification.message}
+                      </p>
+                    </button>
+
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div className="border-t border-border/50 px-4 pb-4 pt-3">
+                        <p className="mb-3 text-sm leading-relaxed text-foreground">
+                          {notification.fullMessage}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {"Enviada: " + formatFullDate(notification.date)}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {notification.message}
-                  </p>
-                </button>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
