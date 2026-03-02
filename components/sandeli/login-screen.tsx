@@ -4,6 +4,14 @@ import { useState } from "react"
 import Image from "next/image"
 import { useApp, generateUserCode } from "@/lib/app-context"
 import { Mail, Phone, ArrowRight, Loader2 } from "lucide-react"
+import { CountryCodeSelector } from "./country-code-selector"
+import { countryCodes, type CountryCode } from "@/lib/country-codes"
+
+// Test credentials (local, no DB needed)
+const TEST_EMAIL = "prueba@gmail.com"
+const TEST_PHONE = "0123456789"
+
+const defaultCountry = countryCodes.find((c) => c.code === "CO")!
 
 export function LoginScreen() {
   const { setScreen, setUser } = useApp()
@@ -11,24 +19,39 @@ export function LoginScreen() {
   const [value, setValue] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [selectedCountry, setSelectedCountry] = useState<CountryCode>(defaultCountry)
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   const isValidPhone = (phone: string) =>
-    /^[\d\s\-+()]{7,15}$/.test(phone.replace(/\s/g, ""))
+    /^\d{7,15}$/.test(phone.replace(/[\s\-()]/g, ""))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    if (mode === "email" && !isValidEmail(value)) {
-      setError("Ingresa un correo electronico valido")
-      return
+    if (mode === "email") {
+      if (!isValidEmail(value)) {
+        setError("Ingresa un correo electronico valido")
+        return
+      }
+      if (value.toLowerCase() !== TEST_EMAIL) {
+        setError("Correo no registrado. Usa: prueba@gmail.com")
+        return
+      }
     }
-    if (mode === "phone" && !isValidPhone(value)) {
-      setError("Ingresa un numero telefonico valido")
-      return
+
+    if (mode === "phone") {
+      const cleanPhone = value.replace(/[\s\-()]/g, "")
+      if (!isValidPhone(cleanPhone)) {
+        setError("Ingresa un numero telefonico valido")
+        return
+      }
+      if (cleanPhone !== TEST_PHONE) {
+        setError("Numero no registrado. Usa: 0123456789")
+        return
+      }
     }
 
     setLoading(true)
@@ -36,8 +59,13 @@ export function LoginScreen() {
     // Simulate checking external platform
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
+    const contactInfo =
+      mode === "email"
+        ? { email: value }
+        : { phone: `${selectedCountry.dial} ${value}` }
+
     const newUser = {
-      ...(mode === "email" ? { email: value } : { phone: value }),
+      ...contactInfo,
       avatar: null,
       avatarType: "preset" as const,
       userCode: generateUserCode(),
@@ -122,31 +150,48 @@ export function LoginScreen() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="relative mb-4">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-              {mode === "email" ? (
+          {mode === "email" ? (
+            /* Email input */
+            <div className="relative mb-4">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <Mail className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <Phone className="h-5 w-5 text-muted-foreground" />
-              )}
+              </div>
+              <input
+                type="email"
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value)
+                  setError("")
+                }}
+                placeholder="tu@correo.com"
+                className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                autoComplete="email"
+                inputMode="email"
+              />
             </div>
-            <input
-              type={mode === "email" ? "email" : "tel"}
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value)
-                setError("")
-              }}
-              placeholder={
-                mode === "email"
-                  ? "tu@correo.com"
-                  : "+57 300 000 0000"
-              }
-              className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
-              autoComplete={mode === "email" ? "email" : "tel"}
-              inputMode={mode === "email" ? "email" : "tel"}
-            />
-          </div>
+          ) : (
+            /* Phone input with country code selector */
+            <div className="mb-4 flex">
+              <CountryCodeSelector
+                selected={selectedCountry}
+                onSelect={setSelectedCountry}
+              />
+              <input
+                type="tel"
+                value={value}
+                onChange={(e) => {
+                  // Only allow digits and spaces
+                  const cleaned = e.target.value.replace(/[^\d\s]/g, "")
+                  setValue(cleaned)
+                  setError("")
+                }}
+                placeholder="300 000 0000"
+                className="w-full min-w-0 rounded-r-xl border border-border bg-background py-3.5 pl-4 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                autoComplete="tel"
+                inputMode="tel"
+              />
+            </div>
+          )}
 
           {error && (
             <p className="mb-4 text-sm text-destructive">{error}</p>
