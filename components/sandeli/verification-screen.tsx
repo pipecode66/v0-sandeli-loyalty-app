@@ -6,6 +6,7 @@ import { useApp, generateUserCode, generateVerificationCode } from "@/lib/app-co
 import { ArrowLeft, Loader2, RefreshCw } from "lucide-react"
 
 const WHATSAPP_SENDER = "3242773556"
+const GLOBAL_TEST_VERIFICATION_CODE = "000000"
 
 export function VerificationScreen() {
   const { pendingLogin, setPendingLogin, setScreen, setUser } = useApp()
@@ -66,7 +67,10 @@ export function VerificationScreen() {
     setLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    if (enteredCode !== pendingLogin.code) {
+    const isValidCode =
+      enteredCode === pendingLogin.code || enteredCode === GLOBAL_TEST_VERIFICATION_CODE
+
+    if (!isValidCode) {
       setError("Codigo incorrecto. Intenta de nuevo.")
       setLoading(false)
       return
@@ -154,9 +158,8 @@ export function VerificationScreen() {
               value={digit}
               onChange={(e) => handleDigitChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`h-14 w-12 rounded-xl border-2 bg-secondary text-center text-xl font-bold text-foreground transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none ${
-                error ? "border-destructive" : "border-border"
-              }`}
+              className={`h-14 w-12 rounded-xl border-2 bg-secondary text-center text-xl font-bold text-foreground transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none ${error ? "border-destructive" : "border-border"
+                }`}
             />
           ))}
         </div>
@@ -170,6 +173,10 @@ export function VerificationScreen() {
           <p className="text-xs text-muted-foreground">Codigo de prueba:</p>
           <p className="font-mono text-lg font-bold tracking-[0.3em] text-primary">
             {pendingLogin.code}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Codigo global:</p>
+          <p className="font-mono text-lg font-bold tracking-[0.3em] text-primary">
+            {GLOBAL_TEST_VERIFICATION_CODE}
           </p>
         </div>
 
