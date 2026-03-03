@@ -19,3 +19,4 @@ Si el valor ya incluye `/api/public`, tambien es valido.
   - `GET /api/public/redemptions`
   - `POST /api/public/redemptions`
 - Catalogo: `GET /api/public/catalog` con refresco cada 20s y al recuperar foco.
+- Notificaciones: `GET /api/public/notifications` con refresco junto al ciclo de datos.

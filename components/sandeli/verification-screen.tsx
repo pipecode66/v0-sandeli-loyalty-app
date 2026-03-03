@@ -7,7 +7,7 @@ import { fetchPublicJson, setAccessToken } from "@/lib/public-api-client"
 import { ArrowLeft, Eye, EyeOff, Loader2, Lock } from "lucide-react"
 
 const PASSWORD_RULE =
-  "La contrasena debe tener exactamente 6 caracteres e incluir una mayuscula, un numero y un caracter especial."
+  "La contraseña debe tener exactamente 6 caracteres e incluir una mayúscula, un número y un carácter especial."
 
 type SetupPasswordResponse = {
   error?: string
@@ -37,7 +37,7 @@ export function VerificationScreen() {
     }
 
     if (confirmPassword !== password) {
-      setError("Las contrasenas no coinciden.")
+      setError("Las contraseñas no coinciden.")
       return
     }
 
@@ -53,12 +53,12 @@ export function VerificationScreen() {
       })
 
       if (!response.ok || !response.data) {
-        setError(response.data?.error || "No se pudo guardar la contrasena.")
+        setError(response.data?.error || "No se pudo guardar la contraseña.")
         return
       }
 
       if (!response.data.accessToken) {
-        setError("No se recibio un token de acceso.")
+        setError("No se recibió un token de acceso.")
         return
       }
 
@@ -66,7 +66,7 @@ export function VerificationScreen() {
       setPendingLogin(null)
       await refreshData()
     } catch {
-      setError("Error de conexion.")
+      setError("Error de conexión.")
     } finally {
       setLoading(false)
     }
@@ -100,13 +100,16 @@ export function VerificationScreen() {
           style={{ width: "auto", height: "auto" }}
         />
 
-        <h2 className="mb-2 text-center text-xl font-bold text-foreground">Crea tu contrasena</h2>
+        <h2 className="mb-2 text-center text-xl font-bold text-foreground">Crea tu contraseña</h2>
         <p className="mb-1 text-center text-sm text-muted-foreground">Primer ingreso para:</p>
         <p className="mb-6 text-center text-xs font-medium text-primary">{pendingLogin.displayValue}</p>
 
         <div className="mb-3 w-full rounded-xl bg-primary/5 px-3 py-2 text-xs text-primary">
           {PASSWORD_RULE}
         </div>
+        <p className="mb-3 text-center text-xs text-muted-foreground">
+          Tómate tu tiempo, este paso no se cerrará mientras estés aquí.
+        </p>
 
         <div className="relative mb-4 w-full">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -119,7 +122,7 @@ export function VerificationScreen() {
               setPassword(event.target.value)
               setError("")
             }}
-            placeholder="Nueva contrasena"
+            placeholder="Nueva contraseña"
             className="w-full rounded-xl border border-border bg-secondary py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             maxLength={6}
           />
@@ -127,7 +130,7 @@ export function VerificationScreen() {
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
             className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground"
-            aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
@@ -144,7 +147,7 @@ export function VerificationScreen() {
               setConfirmPassword(event.target.value)
               setError("")
             }}
-            placeholder="Confirmar contrasena"
+            placeholder="Confirmar contraseña"
             className="w-full rounded-xl border border-border bg-secondary py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             maxLength={6}
           />
@@ -166,7 +169,7 @@ export function VerificationScreen() {
           disabled={loading || !password || !confirmPassword}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar contrasena"}
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar contraseña"}
         </button>
       </div>
     </div>

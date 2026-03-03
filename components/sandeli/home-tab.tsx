@@ -1,18 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useApp } from "@/lib/app-context"
-import { Check, ChevronRight, Copy, Gift, LogOut, Star } from "lucide-react"
 import Image from "next/image"
-
-const AVATAR_ICONS: Record<string, string> = {
-  a1: "A",
-  a2: "B",
-  a3: "C",
-  a4: "D",
-  a5: "E",
-  a6: "F",
-}
+import { Check, ChevronRight, Copy, Gift, LogOut, Star } from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { getPresetAvatarEmoji } from "@/lib/preset-avatars"
 
 export function HomeTab() {
   const { user, products, banners, setMainTab, logout } = useApp()
@@ -29,7 +21,7 @@ export function HomeTab() {
     try {
       await navigator.clipboard.writeText(user.userCode)
     } catch {
-      // Silent fallback.
+      // Silencioso en navegadores sin soporte.
     }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -37,7 +29,7 @@ export function HomeTab() {
 
   const greeting = () => {
     const hour = new Date().getHours()
-    if (hour < 12) return "Buenos dias"
+    if (hour < 12) return "Buenos días"
     if (hour < 18) return "Buenas tardes"
     return "Buenas noches"
   }
@@ -49,41 +41,6 @@ export function HomeTab() {
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-4">
-      {banners.length > 0 && (
-        <div className="mb-5 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {banners.map((banner) => {
-            const targetUrl = banner.redirectUrl
-            return (
-              <button
-                key={banner.id}
-                type="button"
-                onClick={() => openBanner(targetUrl)}
-                className="relative min-h-[120px] min-w-[280px] overflow-hidden rounded-2xl border bg-card"
-              >
-                {banner.mediaType === "image" ? (
-                  <Image
-                    src={banner.mediaUrl}
-                    alt="Banner promocional"
-                    fill
-                    className="object-cover"
-                    sizes="280px"
-                  />
-                ) : (
-                  <video
-                    src={banner.mediaUrl}
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
       <div className="mb-5 rounded-2xl bg-primary p-5">
         <div className="flex items-center gap-4">
           {user.avatarType === "custom" && user.avatar ? (
@@ -94,7 +51,7 @@ export function HomeTab() {
             />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-primary-foreground/30 bg-primary-foreground/20 text-2xl">
-              {AVATAR_ICONS[user.avatar || "a1"] || "A"}
+              {getPresetAvatarEmoji(user.avatar)}
             </div>
           )}
           <div className="flex-1">
@@ -106,7 +63,7 @@ export function HomeTab() {
         <div className="mt-4 flex items-center gap-3 rounded-xl bg-primary-foreground/10 px-4 py-2.5">
           <div className="flex-1">
             <p className="text-[10px] uppercase tracking-wider text-primary-foreground/60">
-              Codigo exclusivo
+              Código exclusivo
             </p>
             <p className="font-mono text-lg font-bold tracking-widest text-primary-foreground">
               {user.userCode}
@@ -116,7 +73,7 @@ export function HomeTab() {
             type="button"
             onClick={handleCopy}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-foreground/20 text-primary-foreground transition-all active:scale-90"
-            aria-label="Copiar codigo"
+            aria-label="Copiar código"
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </button>
@@ -139,6 +96,38 @@ export function HomeTab() {
           <p className="text-xs text-muted-foreground">Canjeables ahora</p>
         </div>
       </div>
+
+      {banners.length > 0 && (
+        <div className="mb-5 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {banners.map((banner) => (
+            <button
+              key={banner.id}
+              type="button"
+              onClick={() => openBanner(banner.redirectUrl)}
+              className="relative min-h-[120px] min-w-[280px] overflow-hidden rounded-2xl border bg-card"
+            >
+              {banner.mediaType === "image" ? (
+                <Image
+                  src={banner.mediaUrl}
+                  alt="Banner promocional"
+                  fill
+                  className="object-cover"
+                  sizes="280px"
+                />
+              ) : (
+                <video
+                  src={banner.mediaUrl}
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="mb-5">
         <div className="mb-3 flex items-center justify-between">
@@ -185,7 +174,7 @@ export function HomeTab() {
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary active:scale-[0.98]"
       >
         <LogOut className="h-4 w-4" />
-        Cerrar sesion
+        Cerrar sesión
       </button>
     </div>
   )

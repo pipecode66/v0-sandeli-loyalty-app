@@ -1,7 +1,8 @@
 "use client"
 
-import { useApp } from "@/lib/app-context"
+import { useMemo } from "react"
 import { Calendar, Receipt, Star } from "lucide-react"
+import { useApp } from "@/lib/app-context"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-CO", {
@@ -20,10 +21,28 @@ function formatCurrency(value: number) {
 }
 
 export function HistoryTab() {
-  const { purchases } = useApp()
+  const { purchases, redemptions } = useApp()
 
   const totalPoints = purchases.reduce((sum, purchase) => sum + purchase.pointsEarned, 0)
-  const totalAmount = purchases.reduce((sum, purchase) => sum + purchase.total, 0)
+
+  const favoriteDish = useMemo(() => {
+    const validOrders = redemptions.filter((item) => item.status !== "rejected")
+    if (validOrders.length === 0) return null
+
+    const counts = new Map<string, number>()
+    for (const redemption of validOrders) {
+      const key = redemption.productName.trim()
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+
+    let winner: { name: string; count: number } | null = null
+    for (const [name, count] of counts.entries()) {
+      if (!winner || count > winner.count) {
+        winner = { name, count }
+      }
+    }
+    return winner
+  }, [redemptions])
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-4">
@@ -42,8 +61,12 @@ export function HistoryTab() {
           <p className="text-[10px] text-muted-foreground">Pts ganados</p>
         </div>
         <div className="rounded-xl bg-secondary p-3 text-center">
-          <p className="text-xs font-bold text-foreground">{formatCurrency(totalAmount)}</p>
-          <p className="text-[10px] text-muted-foreground">Total compras</p>
+          <p className="truncate text-xs font-bold text-foreground">
+            {favoriteDish?.name || "Sin pedidos"}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {favoriteDish ? `Plato favorito (${favoriteDish.count})` : "Plato favorito"}
+          </p>
         </div>
       </div>
 
@@ -81,8 +104,8 @@ export function HistoryTab() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
             <Receipt className="h-8 w-8 text-muted-foreground" />
           </div>
-          <p className="text-base font-semibold text-foreground">Sin compras aun</p>
-          <p className="text-sm text-muted-foreground">Tus facturas apareceran aqui</p>
+          <p className="text-base font-semibold text-foreground">Sin compras aún</p>
+          <p className="text-sm text-muted-foreground">Tus facturas aparecerán aquí.</p>
         </div>
       )}
     </div>

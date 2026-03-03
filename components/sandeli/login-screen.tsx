@@ -45,7 +45,7 @@ export function LoginScreen() {
 
     const trimmed = value.trim()
     if (!trimmed) {
-      setError("Ingresa un correo o telefono.")
+      setError("Ingresa un correo o teléfono.")
       return
     }
 
@@ -55,7 +55,7 @@ export function LoginScreen() {
     if (mode === "email") {
       const normalizedEmail = trimmed.toLowerCase()
       if (!isValidEmail(normalizedEmail)) {
-        setError("Ingresa un correo electronico valido.")
+        setError("Ingresa un correo electrónico válido.")
         return
       }
       identifier = normalizedEmail
@@ -63,7 +63,7 @@ export function LoginScreen() {
     } else {
       const normalizedPhone = normalizePhone(trimmed, selectedCountry.dial)
       if (!isValidPhone(normalizedPhone)) {
-        setError("Ingresa un numero telefonico valido.")
+        setError("Ingresa un número telefónico válido.")
         return
       }
       identifier = normalizedPhone
@@ -78,7 +78,7 @@ export function LoginScreen() {
       })
 
       if (!response.ok || !response.data) {
-        setError(response.data?.error || "No se pudo iniciar sesion.")
+        setError(response.data?.error || "No se pudo iniciar sesión.")
         return
       }
 
@@ -94,7 +94,7 @@ export function LoginScreen() {
       }
 
       if (!response.data.accessToken) {
-        setError("No se recibio un token de acceso.")
+        setError("No se recibió un token de acceso.")
         return
       }
 
@@ -102,7 +102,7 @@ export function LoginScreen() {
       setPendingLogin(null)
       await refreshData()
     } catch {
-      setError("Error de conexion. Intenta de nuevo.")
+      setError("Error de conexión. Intenta de nuevo.")
     } finally {
       setLoading(false)
     }
@@ -127,15 +127,15 @@ export function LoginScreen() {
             priority
           />
           <p className="text-center text-sm text-muted-foreground">
-            Tu programa de fidelizacion saludable
+            Tu programa de fidelización saludable
           </p>
         </div>
       </div>
 
       <div className="safe-bottom rounded-t-3xl bg-secondary px-6 pb-10 pt-8">
-        <h2 className="mb-1 text-xl font-semibold text-foreground">Iniciar sesion</h2>
+        <h2 className="mb-1 text-xl font-semibold text-foreground">Iniciar sesión</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          Usa tu correo o telefono y tu contrasena de 6 caracteres.
+          Usa tu correo o teléfono y tu contraseña de 6 caracteres.
         </p>
 
         <div className="mb-5 flex rounded-xl bg-background p-1">
@@ -153,7 +153,7 @@ export function LoginScreen() {
             }`}
           >
             <Phone className="h-4 w-4" />
-            Telefono
+            Teléfono
           </button>
           <button
             type="button"
@@ -221,7 +221,7 @@ export function LoginScreen() {
                 setPassword(event.target.value)
                 setError("")
               }}
-              placeholder="Contrasena"
+              placeholder="Contraseña"
               className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               autoComplete="current-password"
             />
@@ -229,7 +229,7 @@ export function LoginScreen() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground"
-              aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -257,7 +257,7 @@ export function LoginScreen() {
         </form>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Si es tu primer ingreso, despues de continuar deberas crear tu contrasena.
+          Si es tu primer ingreso, después de continuar deberás crear tu contraseña.
         </p>
       </div>
     </div>

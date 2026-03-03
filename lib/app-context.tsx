@@ -26,6 +26,8 @@ export interface Notification {
   title: string
   message: string
   fullMessage: string
+  category?: string
+  imageUrl?: string | null
   date: string
   read: boolean
 }
@@ -36,6 +38,16 @@ export interface PurchaseRecord {
   invoiceNumber: string
   total: number
   pointsEarned: number
+}
+
+export interface RedemptionRecord {
+  id: string
+  code: string
+  productName: string
+  pointsSpent: number
+  status: string
+  createdAt: string
+  validatedAt: string | null
 }
 
 export interface RedeemableProduct {
@@ -72,6 +84,7 @@ interface AppState {
   user: UserProfile | null
   notifications: Notification[]
   purchases: PurchaseRecord[]
+  redemptions: RedemptionRecord[]
   products: RedeemableProduct[]
   banners: HomeBanner[]
   showIOSTutorial: boolean
@@ -135,6 +148,25 @@ function mapInvoicesToPurchases(invoices: Record<string, unknown>[]): PurchaseRe
   }))
 }
 
+function mapRedemptions(items: Record<string, unknown>[]): RedemptionRecord[] {
+  return items.map((item) => {
+    const productRelation = item.products
+    const productData = Array.isArray(productRelation)
+      ? (productRelation[0] as { name?: string } | undefined)
+      : (productRelation as { name?: string } | null)
+
+    return {
+      id: String(item.id || ""),
+      code: String(item.code || ""),
+      productName: String(productData?.name || "Producto"),
+      pointsSpent: Number(item.points_spent || 0),
+      status: String(item.status || ""),
+      createdAt: String(item.created_at || ""),
+      validatedAt: item.validated_at ? String(item.validated_at) : null,
+    }
+  })
+}
+
 function mapProducts(products: Record<string, unknown>[]): RedeemableProduct[] {
   return products.map((product) => {
     const categoryRelation = product.categories
@@ -164,33 +196,43 @@ function mapBanners(items: Record<string, unknown>[]): HomeBanner[] {
   }))
 }
 
-const sampleNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Bienvenido a Sandeli",
-    message: "Gracias por unirte a nuestro programa de fidelizacion.",
-    fullMessage:
-      "Gracias por unirte a nuestro programa de fidelizacion. Acumula puntos con cada compra y canjealos por tus productos favoritos.",
-    date: new Date().toISOString(),
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Promociones activas",
-    message: "Revisa los banners para ver promociones del momento.",
-    fullMessage:
-      "En la pantalla principal encontraras banners activos con promociones y accesos directos a informacion de Sandeli.",
-    date: new Date(Date.now() - 86400000).toISOString(),
-    read: false,
-  },
-]
+function mapNotifications(items: Record<string, unknown>[]): Notification[] {
+  return items.map((item) => {
+    const description = String(item.description || "")
+    const shortMessage =
+      description.length > 90 ? `${description.slice(0, 87).trimEnd()}...` : description
+
+    return {
+      id: String(item.id || ""),
+      title: String(item.title || "Notificación"),
+      category: item.category ? String(item.category) : undefined,
+      imageUrl: item.image_url ? String(item.image_url) : null,
+      message: shortMessage,
+      fullMessage: description,
+      date: String(item.created_at || new Date().toISOString()),
+      read: false,
+    }
+  })
+}
+
+function mergeNotificationReadState(
+  current: Notification[],
+  incoming: Notification[],
+): Notification[] {
+  const readById = new Map(current.map((item) => [item.id, item.read]))
+  return incoming.map((item) => ({
+    ...item,
+    read: readById.get(item.id) || false,
+  }))
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [screen, setScreen] = useState<AppScreen>("login")
   const [mainTab, setMainTab] = useState<MainTab>("home")
   const [user, setUserState] = useState<UserProfile | null>(null)
-  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([])
+  const [redemptions, setRedemptions] = useState<RedemptionRecord[]>([])
   const [products, setProducts] = useState<RedeemableProduct[]>([])
   const [banners, setBanners] = useState<HomeBanner[]>([])
   const [showIOSTutorial, setShowIOSTutorial] = useState(false)
@@ -213,12 +255,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const loadNotifications = useCallback(async () => {
+    const response = await fetchPublicJson<{ notifications?: Record<string, unknown>[] }>(
+      "/notifications",
+      { method: "GET" },
+    )
+
+    if (response.ok && response.data?.notifications) {
+      const mapped = mapNotifications(response.data.notifications)
+      setNotifications((current) => mergeNotificationReadState(current, mapped))
+    }
+  }, [])
+
   const hydrateClientSession = useCallback(
     async (tokenOverride?: string | null) => {
       const token = tokenOverride || resolveToken()
       if (!token) {
-        setUserState(null)
-        setScreen("login")
+        if (!pendingLogin) {
+          setUserState(null)
+          setScreen("login")
+        }
         return
       }
 
@@ -233,6 +289,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setAccessTokenState(null)
         setUserState(null)
         setPurchases([])
+        setRedemptions([])
         setScreen("login")
         return
       }
@@ -246,7 +303,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setShowIOSTutorial(true)
       }
     },
-    [resolveToken],
+    [pendingLogin, resolveToken],
   )
 
   const loadPurchaseHistory = useCallback(
@@ -272,14 +329,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [resolveToken],
   )
 
+  const loadRedemptionHistory = useCallback(
+    async (tokenOverride?: string | null) => {
+      const token = tokenOverride || resolveToken()
+      if (!token) {
+        setRedemptions([])
+        return
+      }
+
+      const response = await fetchPublicJson<{ redemptions?: Record<string, unknown>[] }>(
+        "/redemptions",
+        { method: "GET" },
+        token,
+      )
+
+      if (response.ok && response.data?.redemptions) {
+        setRedemptions(mapRedemptions(response.data.redemptions))
+      } else if (response.status === 401) {
+        setRedemptions([])
+      }
+    },
+    [resolveToken],
+  )
+
   const refreshData = useCallback(async () => {
     const token = resolveToken()
 
     if (!token) {
-      setUserState(null)
-      setPurchases([])
-      setScreen("login")
-      await loadCatalogData()
+      if (!pendingLogin) {
+        setUserState(null)
+        setPurchases([])
+        setRedemptions([])
+        setScreen("login")
+      }
+      await Promise.all([loadCatalogData(), loadNotifications()])
       return
     }
 
@@ -290,19 +373,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await Promise.all([
       hydrateClientSession(token),
       loadCatalogData(),
+      loadNotifications(),
       loadPurchaseHistory(token),
+      loadRedemptionHistory(token),
     ])
-  }, [accessToken, hydrateClientSession, loadCatalogData, loadPurchaseHistory, resolveToken])
+  }, [
+    accessToken,
+    hydrateClientSession,
+    loadCatalogData,
+    loadNotifications,
+    loadPurchaseHistory,
+    loadRedemptionHistory,
+    pendingLogin,
+    resolveToken,
+  ])
 
   useEffect(() => {
     const token = getAccessToken()
     if (token) {
       setAccessTokenState(token)
     }
-    refreshData()
+    refreshData().catch(() => undefined)
   }, [refreshData])
 
   useEffect(() => {
+    const token = resolveToken()
+    if (!token || pendingLogin) return
+
     const interval = window.setInterval(() => {
       refreshData().catch(() => undefined)
     }, 20000)
@@ -325,7 +422,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("focus", onFocus)
       document.removeEventListener("visibilitychange", onVisibilityChange)
     }
-  }, [refreshData])
+  }, [pendingLogin, refreshData, resolveToken])
 
   const setUser = useCallback((newUser: UserProfile | null) => {
     setUserState(newUser)
@@ -369,7 +466,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   )
 
   const markNotificationRead = useCallback((id: string) => {
-    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, read: true } : item)))
+    setNotifications((current) =>
+      current.map((item) => (item.id === id ? { ...item, read: true } : item)),
+    )
   }, [])
 
   const dismissIOSTutorial = useCallback(() => {
@@ -381,7 +480,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (product: RedeemableProduct) => {
       const token = resolveToken()
       if (!token) {
-        return { success: false, error: "Debes iniciar sesion para canjear." }
+        return { success: false, error: "Debes iniciar sesión para canjear." }
       }
 
       const response = await fetchPublicJson<{
@@ -406,13 +505,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      await hydrateClientSession(token)
+      await Promise.all([
+        hydrateClientSession(token),
+        loadPurchaseHistory(token),
+        loadRedemptionHistory(token),
+      ])
+
       return {
         success: true,
         code: response.data?.code || response.data?.redemption?.code,
       }
     },
-    [hydrateClientSession, resolveToken],
+    [hydrateClientSession, loadPurchaseHistory, loadRedemptionHistory, resolveToken],
   )
 
   const logout = useCallback(() => {
@@ -420,6 +524,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAccessTokenState(null)
     setUserState(null)
     setPurchases([])
+    setRedemptions([])
+    setNotifications([])
     setPendingLogin(null)
     setScreen("login")
     setMainTab("home")
@@ -432,6 +538,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user,
       notifications,
       purchases,
+      redemptions,
       products,
       banners,
       showIOSTutorial,
@@ -458,6 +565,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       products,
       purchases,
       redeemProduct,
+      redemptions,
       refreshData,
       screen,
       setUser,

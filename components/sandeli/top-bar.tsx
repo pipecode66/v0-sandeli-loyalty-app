@@ -14,14 +14,14 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex items-center justify-between bg-background/95 px-6 py-4 backdrop-blur-md safe-top">
+      <header className="safe-top sticky top-0 z-40 flex items-center justify-between bg-background/95 px-4 py-2.5 backdrop-blur-md">
         {/* Logo */}
         <Image
           src="/images/logo.png"
           alt="Sandeli"
           width={120}
           height={46}
-          className="h-9 w-auto"
+          className="h-8 w-auto"
         />
 
         <div className="flex items-center gap-3">
