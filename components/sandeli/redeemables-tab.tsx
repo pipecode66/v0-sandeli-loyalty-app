@@ -2,7 +2,7 @@
 
 import { useApp, type RedeemableProduct } from "@/lib/app-context"
 import { Star, X, Clock, CheckCircle, AlertTriangle } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 
 function RedeemPopup({
@@ -27,19 +27,13 @@ function RedeemPopup({
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
         </div>
-        <h3 className="mb-2 text-lg font-bold text-foreground">
-          Canje exitoso
-        </h3>
-        <p className="mb-1 text-sm text-muted-foreground">
-          {product.name}
-        </p>
+        <h3 className="mb-2 text-lg font-bold text-foreground">Canje exitoso</h3>
+        <p className="mb-1 text-sm text-muted-foreground">{product.name}</p>
         <p className="mb-4 text-xs text-muted-foreground">
           Presenta este codigo en el establecimiento para validar tu canje:
         </p>
         <div className="mb-4 rounded-xl bg-primary/5 px-4 py-3">
-          <p className="font-mono text-2xl font-bold tracking-[0.2em] text-primary">
-            {code}
-          </p>
+          <p className="font-mono text-2xl font-bold tracking-[0.2em] text-primary">{code}</p>
         </div>
         <p className="mb-5 text-xs text-muted-foreground">
           Este codigo sera validado por el administrador en la otra aplicacion.
@@ -80,9 +74,7 @@ function LimitPopup({
             <Clock className="h-8 w-8 text-amber-600" />
           </div>
         </div>
-        <h3 className="mb-2 text-lg font-bold text-foreground">
-          Limite diario alcanzado
-        </h3>
+        <h3 className="mb-2 text-lg font-bold text-foreground">Limite diario alcanzado</h3>
         <p className="mb-4 text-sm text-muted-foreground">
           Has alcanzado el limite de 60 puntos canjeables por dia.
           Por favor espera para volver a redimir.
@@ -111,11 +103,13 @@ function ProductDetail({
   onClose,
   onRedeem,
   canAfford,
+  missingPoints,
 }: {
   product: RedeemableProduct
   onClose: () => void
   onRedeem: () => void
   canAfford: boolean
+  missingPoints: number
 }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col">
@@ -125,12 +119,10 @@ function ProductDetail({
         aria-hidden="true"
       />
       <div className="relative mt-auto flex max-h-[90dvh] flex-col rounded-t-3xl bg-background shadow-2xl animate-in slide-in-from-bottom duration-300">
-        {/* Handle */}
         <div className="flex justify-center py-3">
           <div className="h-1 w-10 rounded-full bg-muted" />
         </div>
 
-        {/* Close button */}
         <button
           type="button"
           onClick={onClose}
@@ -141,7 +133,6 @@ function ProductDetail({
         </button>
 
         <div className="flex-1 overflow-y-auto px-5 pb-8 safe-bottom">
-          {/* Product image */}
           <div className="relative mb-5 h-56 w-full overflow-hidden rounded-2xl bg-secondary">
             <Image
               src={product.image}
@@ -152,11 +143,8 @@ function ProductDetail({
             />
           </div>
 
-          {/* Product info */}
           <div className="mb-2 flex items-start justify-between">
-            <h3 className="text-xl font-bold text-foreground">
-              {product.name}
-            </h3>
+            <h3 className="text-xl font-bold text-foreground">{product.name}</h3>
             <span className="ml-2 flex-shrink-0 rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
               {product.pointsCost} pts
             </span>
@@ -166,33 +154,27 @@ function ProductDetail({
             {product.category}
           </span>
 
-          <p className="mb-6 text-sm leading-relaxed text-foreground">
-            {product.description}
-          </p>
+          <p className="mb-6 text-sm leading-relaxed text-foreground">{product.description}</p>
 
-          {/* Availability */}
           {canAfford ? (
             <div className="mb-5 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-700">
-                Disponible para canjear
-              </span>
+              <span className="text-sm font-medium text-green-700">Disponible para canjear</span>
             </div>
           ) : (
             <div className="mb-5 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
               <span className="text-sm font-medium text-amber-700">
-                {"No tienes suficientes puntos (faltan " + (product.pointsCost - 0) + " pts)"}
+                {"No tienes suficientes puntos (faltan " + missingPoints + " pts)"}
               </span>
             </div>
           )}
 
-          {/* Redeem button */}
           <button
             type="button"
             onClick={onRedeem}
             disabled={!canAfford}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-base font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]"
           >
             <Star className="h-5 w-5" fill="currentColor" />
             Canjear por puntos
@@ -213,25 +195,26 @@ export function RedeemablesTab() {
     product?: RedeemableProduct
     waitMinutes?: number
   } | null>(null)
+  const [redeemError, setRedeemError] = useState("")
 
-  const categories = [
-    "Todas",
-    ...Array.from(new Set(products.map((p) => p.category))),
-  ]
+  const categories = ["Todas", ...Array.from(new Set(products.map((p) => p.category)))]
 
   const filtered =
     activeCategory === "Todas"
       ? products
-      : products.filter((p) => p.category === activeCategory)
+      : products.filter((product) => product.category === activeCategory)
 
-  const handleRedeem = (product: RedeemableProduct) => {
-    const result = redeemProduct(product)
+  const handleRedeem = async (product: RedeemableProduct) => {
+    setRedeemError("")
+    const result = await redeemProduct(product)
     if (result.success && result.code) {
       setSelectedProduct(null)
       setRedeemResult({ type: "success", code: result.code, product })
     } else if (result.waitMinutes) {
       setSelectedProduct(null)
       setRedeemResult({ type: "limit", waitMinutes: result.waitMinutes })
+    } else if (result.error) {
+      setRedeemError(result.error)
     }
   }
 
@@ -241,32 +224,34 @@ export function RedeemablesTab() {
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-4">
-      <h2 className="mb-1 text-xl font-bold text-foreground">
-        Reclamables
-      </h2>
+      <h2 className="mb-1 text-xl font-bold text-foreground">Reclamables</h2>
       <p className="mb-5 text-sm text-muted-foreground">
         Canjea tus puntos por productos deliciosos y saludables
       </p>
 
-      {/* Category filter */}
+      {redeemError && (
+        <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {redeemError}
+        </div>
+      )}
+
       <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        {categories.map((cat) => (
+        {categories.map((category) => (
           <button
-            key={cat}
+            key={category}
             type="button"
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => setActiveCategory(category)}
             className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all active:scale-95 ${
-              activeCategory === cat
+              activeCategory === category
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-secondary text-foreground"
             }`}
           >
-            {cat}
+            {category}
           </button>
         ))}
       </div>
 
-      {/* Points and daily limit bar */}
       <div className="mb-5 flex items-center gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-xl bg-primary/5 px-3 py-2.5">
           <Star className="h-4 w-4 text-primary" fill="currentColor" />
@@ -285,7 +270,6 @@ export function RedeemablesTab() {
         </div>
       </div>
 
-      {/* Products list */}
       <div className="flex flex-col gap-3">
         {filtered.map((product) => {
           const canAfford = (user?.points ?? 0) >= product.pointsCost
@@ -312,7 +296,7 @@ export function RedeemablesTab() {
                 </div>
                 <div className="flex flex-1 flex-col justify-center">
                   <div className="mb-1 flex items-start justify-between">
-                    <h3 className="text-sm font-semibold text-foreground leading-tight">
+                    <h3 className="text-sm font-semibold leading-tight text-foreground">
                       {product.name}
                     </h3>
                     <span
@@ -325,7 +309,7 @@ export function RedeemablesTab() {
                       {product.pointsCost} pts
                     </span>
                   </div>
-                  <p className="mb-1.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mb-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
                     {product.description}
                   </p>
                   <span
@@ -346,17 +330,16 @@ export function RedeemablesTab() {
         })}
       </div>
 
-      {/* Product detail modal */}
       {selectedProduct && (
         <ProductDetail
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onRedeem={() => handleRedeem(selectedProduct)}
           canAfford={(user?.points ?? 0) >= selectedProduct.pointsCost}
+          missingPoints={Math.max(selectedProduct.pointsCost - (user?.points ?? 0), 0)}
         />
       )}
 
-      {/* Redeem success popup */}
       {redeemResult?.type === "success" && redeemResult.code && redeemResult.product && (
         <RedeemPopup
           code={redeemResult.code}
@@ -365,7 +348,6 @@ export function RedeemablesTab() {
         />
       )}
 
-      {/* Daily limit popup */}
       {redeemResult?.type === "limit" && redeemResult.waitMinutes && (
         <LimitPopup
           waitMinutes={redeemResult.waitMinutes}

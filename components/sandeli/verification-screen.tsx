@@ -1,108 +1,75 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
-import { useApp, generateUserCode, generateVerificationCode } from "@/lib/app-context"
-import { ArrowLeft, Loader2, RefreshCw } from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { fetchPublicJson, setAccessToken } from "@/lib/public-api-client"
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock } from "lucide-react"
 
-const WHATSAPP_SENDER = "3242773556"
-const GLOBAL_TEST_VERIFICATION_CODE = "000000"
+const PASSWORD_RULE =
+  "La contrasena debe tener exactamente 6 caracteres e incluir una mayuscula, un numero y un caracter especial."
+
+type SetupPasswordResponse = {
+  error?: string
+  success?: boolean
+  accessToken?: string
+}
+
+function isValidPassword(password: string) {
+  return /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6}$/.test(password)
+}
 
 export function VerificationScreen() {
-  const { pendingLogin, setPendingLogin, setScreen, setUser } = useApp()
-  const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""])
+  const { pendingLogin, setPendingLogin, setScreen, refreshData } = useApp()
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-
-  useEffect(() => {
-    inputRefs.current[0]?.focus()
-  }, [])
-
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [resendCooldown])
 
   if (!pendingLogin) return null
 
-  const handleDigitChange = (index: number, val: string) => {
-    if (!/^\d*$/.test(val)) return
-    const newDigits = [...digits]
-    if (val.length > 1) {
-      // Handle paste
-      const pastedDigits = val.slice(0, 6).split("")
-      for (let i = 0; i < 6; i++) {
-        newDigits[i] = pastedDigits[i] || ""
-      }
-      setDigits(newDigits)
-      const lastFilled = Math.min(pastedDigits.length - 1, 5)
-      inputRefs.current[lastFilled]?.focus()
+  const handleSubmit = async () => {
+    if (!isValidPassword(password)) {
+      setError(PASSWORD_RULE)
       return
     }
-    newDigits[index] = val
-    setDigits(newDigits)
-    setError("")
-    if (val && index < 5) {
-      inputRefs.current[index + 1]?.focus()
-    }
-  }
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !digits[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }
-  }
-
-  const handleVerify = async () => {
-    const enteredCode = digits.join("")
-    if (enteredCode.length !== 6) {
-      setError("Ingresa el codigo completo de 6 digitos")
+    if (confirmPassword !== password) {
+      setError("Las contrasenas no coinciden.")
       return
     }
 
     setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const isValidCode =
-      enteredCode === pendingLogin.code || enteredCode === GLOBAL_TEST_VERIFICATION_CODE
-
-    if (!isValidCode) {
-      setError("Codigo incorrecto. Intenta de nuevo.")
-      setLoading(false)
-      return
-    }
-
-    const newUser = {
-      ...(pendingLogin.mode === "email"
-        ? { email: pendingLogin.value }
-        : { phone: pendingLogin.value }),
-      avatar: null,
-      avatarType: "preset" as const,
-      userCode: generateUserCode(),
-      name: "",
-      points: 117,
-      joinDate: new Date().toISOString(),
-      redeemedToday: 0,
-      lastRedeemDate: "",
-    }
-
-    setUser(newUser)
-    setLoading(false)
-    setScreen("avatar-setup")
-  }
-
-  const handleResend = () => {
-    if (resendCooldown > 0) return
-    const newCode = generateVerificationCode()
-    setPendingLogin({ ...pendingLogin, code: newCode })
-    setDigits(["", "", "", "", "", ""])
     setError("")
-    setResendCooldown(60)
-    inputRefs.current[0]?.focus()
+    try {
+      const response = await fetchPublicJson<SetupPasswordResponse>("/auth/setup-password", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: pendingLogin.clientId,
+          password,
+        }),
+      })
+
+      if (!response.ok || !response.data) {
+        setError(response.data?.error || "No se pudo guardar la contrasena.")
+        return
+      }
+
+      if (!response.data.accessToken) {
+        setError("No se recibio un token de acceso.")
+        return
+      }
+
+      setAccessToken(response.data.accessToken)
+      setPendingLogin(null)
+      await refreshData()
+    } catch {
+      setError("Error de conexion.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleBack = () => {
@@ -113,7 +80,6 @@ export function VerificationScreen() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <div className="relative flex flex-1 flex-col items-center px-6 pt-8">
-        {/* Back button */}
         <div className="mb-8 flex w-full items-center">
           <button
             type="button"
@@ -130,80 +96,77 @@ export function VerificationScreen() {
           alt="Sandeli"
           width={160}
           height={62}
-          className="mb-8"
+          className="mb-8 h-auto w-auto"
+          style={{ width: "auto", height: "auto" }}
         />
 
-        <h2 className="mb-2 text-xl font-bold text-foreground">
-          Codigo de verificacion
-        </h2>
-        <p className="mb-2 text-center text-sm text-muted-foreground">
-          Ingresa el codigo de 6 digitos enviado via WhatsApp
-        </p>
-        <p className="mb-1 text-center text-xs text-muted-foreground">
-          {"Desde: " + WHATSAPP_SENDER}
-        </p>
-        <p className="mb-8 text-center text-xs font-medium text-primary">
-          {"A: " + pendingLogin.value}
-        </p>
+        <h2 className="mb-2 text-center text-xl font-bold text-foreground">Crea tu contrasena</h2>
+        <p className="mb-1 text-center text-sm text-muted-foreground">Primer ingreso para:</p>
+        <p className="mb-6 text-center text-xs font-medium text-primary">{pendingLogin.displayValue}</p>
 
-        {/* Code input */}
-        <div className="mb-6 flex justify-center gap-2">
-          {digits.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => { inputRefs.current[index] = el }}
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={digit}
-              onChange={(e) => handleDigitChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`h-14 w-12 rounded-xl border-2 bg-secondary text-center text-xl font-bold text-foreground transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none ${error ? "border-destructive" : "border-border"
-                }`}
-            />
-          ))}
+        <div className="mb-3 w-full rounded-xl bg-primary/5 px-3 py-2 text-xs text-primary">
+          {PASSWORD_RULE}
         </div>
 
-        {error && (
-          <p className="mb-4 text-center text-sm text-destructive">{error}</p>
-        )}
-
-        {/* Dev helper: show code */}
-        <div className="mb-6 rounded-xl bg-primary/5 px-4 py-3 text-center">
-          <p className="text-xs text-muted-foreground">Codigo de prueba:</p>
-          <p className="font-mono text-lg font-bold tracking-[0.3em] text-primary">
-            {pendingLogin.code}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">Codigo global:</p>
-          <p className="font-mono text-lg font-bold tracking-[0.3em] text-primary">
-            {GLOBAL_TEST_VERIFICATION_CODE}
-          </p>
+        <div className="relative mb-4 w-full">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <Lock className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value)
+              setError("")
+            }}
+            placeholder="Nueva contrasena"
+            className="w-full rounded-xl border border-border bg-secondary py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            maxLength={6}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground"
+            aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
         </div>
+
+        <div className="relative mb-4 w-full">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <Lock className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(event) => {
+              setConfirmPassword(event.target.value)
+              setError("")
+            }}
+            placeholder="Confirmar contrasena"
+            className="w-full rounded-xl border border-border bg-secondary py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            maxLength={6}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground"
+            aria-label={showConfirmPassword ? "Ocultar confirmacion" : "Mostrar confirmacion"}
+          >
+            {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {error && <p className="mb-4 text-center text-sm text-destructive">{error}</p>}
 
         <button
           type="button"
-          onClick={handleVerify}
-          disabled={loading || digits.some((d) => !d)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+          onClick={handleSubmit}
+          disabled={loading || !password || !confirmPassword}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            "Verificar"
-          )}
-        </button>
-
-        {/* Resend */}
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={resendCooldown > 0}
-          className="mt-5 flex items-center justify-center gap-2 text-sm font-medium text-primary transition-all disabled:opacity-50 active:scale-95"
-        >
-          <RefreshCw className="h-4 w-4" />
-          {resendCooldown > 0
-            ? `Reenviar en ${resendCooldown}s`
-            : "Reenviar codigo"}
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar contrasena"}
         </button>
       </div>
     </div>

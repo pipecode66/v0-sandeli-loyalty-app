@@ -2,81 +2,117 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { useApp, generateVerificationCode } from "@/lib/app-context"
-import { Mail, Phone, ArrowRight, Loader2 } from "lucide-react"
+import { useApp } from "@/lib/app-context"
+import { fetchPublicJson, setAccessToken } from "@/lib/public-api-client"
+import { Eye, EyeOff, Lock, Mail, Phone, ArrowRight, Loader2 } from "lucide-react"
 import { CountryCodeSelector } from "./country-code-selector"
 import { countryCodes, type CountryCode } from "@/lib/country-codes"
 
-// Test credentials (local, no DB needed)
-const TEST_EMAIL = "prueba@gmail.com"
-const TEST_PHONE = "0123456789"
-const WHATSAPP_SENDER = "3242773556"
+type LoginResponse = {
+  error?: string
+  success?: boolean
+  requiresPasswordSetup?: boolean
+  clientId?: string
+  clientName?: string
+  accessToken?: string
+}
 
-const defaultCountry = countryCodes.find((c) => c.code === "CO")!
+const defaultCountry = countryCodes.find((country) => country.code === "CO")!
+
+function normalizePhone(input: string, dialCode: string) {
+  const digits = input.replace(/[^\d]/g, "")
+  const dialDigits = dialCode.replace(/[^\d]/g, "")
+  if (digits.startsWith(dialDigits)) return digits
+  return `${dialDigits}${digits}`
+}
 
 export function LoginScreen() {
-  const { setScreen, setPendingLogin } = useApp()
+  const { setScreen, setPendingLogin, refreshData } = useApp()
   const [mode, setMode] = useState<"email" | "phone">("phone")
   const [value, setValue] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [selectedCountry, setSelectedCountry] = useState<CountryCode>(defaultCountry)
 
-  const isValidEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const isValidPhone = (phone: string) => /^\d{7,15}$/.test(phone)
 
-  const isValidPhone = (phone: string) =>
-    /^\d{7,15}$/.test(phone.replace(/[\s\-()]/g, ""))
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
     setError("")
 
-    if (mode === "email") {
-      if (!isValidEmail(value)) {
-        setError("Ingresa un correo electronico valido")
-        return
-      }
-      if (value.toLowerCase() !== TEST_EMAIL) {
-        setError("Correo no registrado. Usa: prueba@gmail.com")
-        return
-      }
+    const trimmed = value.trim()
+    if (!trimmed) {
+      setError("Ingresa un correo o telefono.")
+      return
     }
 
-    if (mode === "phone") {
-      const cleanPhone = value.replace(/[\s\-()]/g, "")
-      if (!isValidPhone(cleanPhone)) {
-        setError("Ingresa un numero telefonico valido")
+    let identifier = trimmed
+    let displayValue = trimmed
+
+    if (mode === "email") {
+      const normalizedEmail = trimmed.toLowerCase()
+      if (!isValidEmail(normalizedEmail)) {
+        setError("Ingresa un correo electronico valido.")
         return
       }
-      if (cleanPhone !== TEST_PHONE) {
-        setError("Numero no registrado. Usa: 0123456789")
+      identifier = normalizedEmail
+      displayValue = normalizedEmail
+    } else {
+      const normalizedPhone = normalizePhone(trimmed, selectedCountry.dial)
+      if (!isValidPhone(normalizedPhone)) {
+        setError("Ingresa un numero telefonico valido.")
         return
       }
+      identifier = normalizedPhone
+      displayValue = `+${normalizedPhone}`
     }
 
     setLoading(true)
+    try {
+      const response = await fetchPublicJson<LoginResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ identifier, password }),
+      })
 
-    // Generate a random verification code
-    const code = generateVerificationCode()
+      if (!response.ok || !response.data) {
+        setError(response.data?.error || "No se pudo iniciar sesion.")
+        return
+      }
 
-    // Simulate sending code via WhatsApp from 3242773556
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (response.data.requiresPasswordSetup) {
+        setPendingLogin({
+          mode,
+          identifier,
+          displayValue,
+          clientId: response.data.clientId || "",
+        })
+        setScreen("verification")
+        return
+      }
 
-    const contactValue =
-      mode === "email" ? value : `${selectedCountry.dial} ${value}`
+      if (!response.data.accessToken) {
+        setError("No se recibio un token de acceso.")
+        return
+      }
 
-    setPendingLogin({ mode, value: contactValue, code })
-    setLoading(false)
-    setScreen("verification")
+      setAccessToken(response.data.accessToken)
+      setPendingLogin(null)
+      await refreshData()
+    } catch {
+      setError("Error de conexion. Intenta de nuevo.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* Top decorative area */}
-      <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-12 pb-8">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-6 pb-8 pt-12">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/5" />
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5" />
           <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-accent/10" />
         </div>
 
@@ -86,7 +122,8 @@ export function LoginScreen() {
             alt="Sandeli - Sano y Delicioso"
             width={260}
             height={100}
-            className="mb-6"
+            className="mb-6 h-auto w-auto"
+            style={{ width: "auto", height: "auto" }}
             priority
           />
           <p className="text-center text-sm text-muted-foreground">
@@ -95,16 +132,12 @@ export function LoginScreen() {
         </div>
       </div>
 
-      {/* Login form */}
-      <div className="rounded-t-3xl bg-secondary px-6 pt-8 pb-10 safe-bottom">
-        <h2 className="mb-1 text-xl font-semibold text-foreground">
-          Iniciar sesion
-        </h2>
+      <div className="safe-bottom rounded-t-3xl bg-secondary px-6 pb-10 pt-8">
+        <h2 className="mb-1 text-xl font-semibold text-foreground">Iniciar sesion</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          Ingresa tu telefono o correo registrado
+          Usa tu correo o telefono y tu contrasena de 6 caracteres.
         </p>
 
-        {/* Toggle - Phone first */}
         <div className="mb-5 flex rounded-xl bg-background p-1">
           <button
             type="button"
@@ -142,28 +175,22 @@ export function LoginScreen() {
 
         <form onSubmit={handleSubmit}>
           {mode === "phone" ? (
-            /* Phone input with country code selector */
             <div className="mb-4 flex">
-              <CountryCodeSelector
-                selected={selectedCountry}
-                onSelect={setSelectedCountry}
-              />
+              <CountryCodeSelector selected={selectedCountry} onSelect={setSelectedCountry} />
               <input
                 type="tel"
                 value={value}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/[^\d\s]/g, "")
-                  setValue(cleaned)
+                onChange={(event) => {
+                  setValue(event.target.value.replace(/[^\d\s]/g, ""))
                   setError("")
                 }}
                 placeholder="300 000 0000"
-                className="w-full min-w-0 rounded-r-xl border border-border bg-background py-3.5 pl-4 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                className="w-full min-w-0 rounded-r-xl border border-border bg-background py-3.5 pl-4 pr-4 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 autoComplete="tel"
                 inputMode="tel"
               />
             </div>
           ) : (
-            /* Email input */
             <div className="relative mb-4">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <Mail className="h-5 w-5 text-muted-foreground" />
@@ -171,31 +198,54 @@ export function LoginScreen() {
               <input
                 type="email"
                 value={value}
-                onChange={(e) => {
-                  setValue(e.target.value)
+                onChange={(event) => {
+                  setValue(event.target.value)
                   setError("")
                 }}
                 placeholder="tu@correo.com"
-                className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 autoComplete="email"
                 inputMode="email"
               />
             </div>
           )}
 
-          {error && (
-            <p className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          <div className="relative mb-4">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value)
+                setError("")
+              }}
+              placeholder="Contrasena"
+              className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground"
+              aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <button
             type="submit"
             disabled={loading || !value.trim()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Enviando codigo...</span>
+                <span>Procesando...</span>
               </>
             ) : (
               <>
@@ -207,11 +257,7 @@ export function LoginScreen() {
         </form>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          {"Se enviara un codigo de verificacion via WhatsApp desde el numero " + WHATSAPP_SENDER}
-        </p>
-
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Al continuar, aceptas los terminos y condiciones del programa de fidelizacion Sandeli.
+          Si es tu primer ingreso, despues de continuar deberas crear tu contrasena.
         </p>
       </div>
     </div>
