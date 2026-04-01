@@ -173,7 +173,7 @@ export function HomeTab() {
       <button
         type="button"
         onClick={logout}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground transition-all active:scale-[0.98] active:bg-secondary/70"
       >
         <LogOut className="h-4 w-4" />
         Cerrar sesión
