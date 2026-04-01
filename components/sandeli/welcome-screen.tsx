@@ -36,8 +36,8 @@ export function WelcomeScreen() {
     )
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <div className="relative flex flex-col items-center bg-primary px-6 pb-20 pt-16">
+    <div className="app-screen flex flex-col">
+      <div className="hero-safe-top relative flex flex-col items-center bg-primary px-6 pb-20">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary-foreground/5" />
           <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/5" />
@@ -53,7 +53,7 @@ export function WelcomeScreen() {
         </p>
       </div>
 
-      <div className="-mt-8 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pb-8 pt-8">
+      <div className="-mt-8 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-8 screen-safe-bottom">
         <div className="mb-6 rounded-2xl bg-secondary p-5">
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Tu código exclusivo

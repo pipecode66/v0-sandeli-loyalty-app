@@ -12,7 +12,7 @@ export function MainApp() {
   const { mainTab } = useApp()
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="app-screen flex flex-col bg-background">
       <TopBar />
 
       <main className="flex flex-1 flex-col pt-2">

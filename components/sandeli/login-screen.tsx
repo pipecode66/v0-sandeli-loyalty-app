@@ -97,7 +97,7 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="app-screen flex flex-col bg-background">
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 pb-8 pt-12">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5" />
@@ -120,7 +120,7 @@ export function LoginScreen() {
         </div>
       </div>
 
-      <div className="safe-bottom rounded-t-3xl bg-secondary px-6 pb-10 pt-8">
+      <div className="screen-safe-bottom rounded-t-3xl bg-secondary px-6 pt-8">
         <h2 className="mb-1 text-xl font-semibold text-foreground">Iniciar sesión</h2>
         <p className="mb-6 text-sm text-muted-foreground">
           Usa tu correo o tu teléfono de 10 dígitos con tu contraseña.

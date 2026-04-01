@@ -52,7 +52,7 @@ export function AvatarSetupScreen() {
   const hasSelection = selectedPreset || customImage
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="app-screen flex flex-col bg-background">
       <div className="px-6 pb-2 pt-14">
         <div className="mb-1 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -169,7 +169,7 @@ export function AvatarSetupScreen() {
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       </div>
 
-      <div className="safe-bottom px-6 pb-8">
+      <div className="screen-safe-bottom px-6">
         <button
           type="button"
           onClick={handleContinue}

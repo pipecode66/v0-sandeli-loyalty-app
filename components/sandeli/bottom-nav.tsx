@@ -13,8 +13,8 @@ export function BottomNav() {
   const { mainTab, setMainTab } = useApp()
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md safe-bottom">
-      <div className="flex items-stretch">
+    <nav className="floating-bottom-nav sticky z-40 px-4">
+      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch rounded-[1.75rem] border border-border/80 bg-background/95 shadow-[0_18px_48px_-28px_rgba(26,27,29,0.55)] backdrop-blur-xl">
         {tabs.map((tab) => {
           const isActive = mainTab === tab.key
           const Icon = tab.icon
@@ -23,7 +23,7 @@ export function BottomNav() {
               key={tab.key}
               type="button"
               onClick={() => setMainTab(tab.key)}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-all active:scale-95 ${
+              className={`flex flex-1 flex-col items-center gap-1 py-3 transition-all active:scale-95 ${
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
               aria-label={tab.label}

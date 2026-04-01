@@ -40,7 +40,7 @@ export function HomeTab() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-5 pb-4">
+    <div className="tab-safe-bottom flex-1 overflow-y-auto px-5">
       <div className="mb-5 rounded-2xl bg-primary p-5">
         <div className="flex items-center gap-4">
           {user.avatarType === "custom" && user.avatar ? (

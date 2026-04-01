@@ -75,7 +75,7 @@ export function NotificationsPanel({ onClose }: Props) {
           </button>
         </div>
 
-        <div className="safe-bottom flex-1 overflow-y-auto px-5 pb-8">
+        <div className="sheet-safe-bottom flex-1 overflow-y-auto px-5">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">

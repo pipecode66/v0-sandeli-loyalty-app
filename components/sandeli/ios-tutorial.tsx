@@ -29,7 +29,7 @@ export function IOSTutorial() {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-t-3xl bg-background px-6 pt-6 pb-10 shadow-2xl animate-in slide-in-from-bottom duration-300 safe-bottom">
+      <div className="sheet-safe-bottom relative w-full max-w-md rounded-t-3xl bg-background px-6 pt-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
         {/* Close */}
         <button
           type="button"

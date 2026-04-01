@@ -77,8 +77,8 @@ export function VerificationScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <div className="relative flex flex-1 flex-col items-center px-6 pt-8">
+    <div className="app-screen flex flex-col bg-background">
+      <div className="screen-safe-bottom relative flex flex-1 flex-col items-center px-6 pt-8">
         <div className="mb-8 flex w-full items-center">
           <button
             type="button"

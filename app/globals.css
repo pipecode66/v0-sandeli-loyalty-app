@@ -36,6 +36,13 @@
   --sandeli-beige: #dcd7d4;
   --sandeli-gray: #898989;
   --sandeli-dark: #1a1b1d;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --browser-ui-bottom-offset: 0px;
+}
+
+html[data-ios-browser='true'] {
+  --browser-ui-bottom-offset: 4rem;
 }
 
 @theme inline {
@@ -89,20 +96,57 @@
 
 /* Mobile-first app styles */
 html, body {
+  min-height: 100%;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  background: var(--background);
+}
+
+body {
+  min-height: 100svh;
+}
+
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
 }
 
 /* Safe area support for notch devices */
 .safe-top {
-  padding-top: 0.35rem;
+  padding-top: calc(var(--safe-area-top) + 0.5rem);
 }
 
-@supports (padding: env(safe-area-inset-top)) {
-  .safe-top {
-    padding-top: calc(env(safe-area-inset-top) + 0.35rem);
+.hero-safe-top {
+  padding-top: calc(var(--safe-area-top) + 2.5rem);
+}
+
+.safe-bottom {
+  padding-bottom: calc(var(--safe-area-bottom) + 0.75rem);
+}
+
+.app-screen {
+  min-height: 100svh;
+}
+
+@supports (height: 100dvh) {
+  .app-screen {
+    min-height: 100dvh;
   }
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+}
+
+.tab-safe-bottom {
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 6.5rem);
+}
+
+.screen-safe-bottom {
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2.5rem);
+}
+
+.sheet-safe-bottom {
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2rem);
+}
+
+.floating-bottom-nav {
+  bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 0.75rem);
 }

@@ -424,6 +424,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pendingLogin, refreshData, resolveToken])
 
+  useEffect(() => {
+    if (typeof document === "undefined") return
+
+    const root = document.documentElement
+    if (isIOS() && !isStandalone()) {
+      root.dataset.iosBrowser = "true"
+    } else {
+      delete root.dataset.iosBrowser
+    }
+
+    return () => {
+      delete root.dataset.iosBrowser
+    }
+  }, [])
+
   const setUser = useCallback((newUser: UserProfile | null) => {
     setUserState(newUser)
   }, [])

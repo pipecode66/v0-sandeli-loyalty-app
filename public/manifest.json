@@ -4,8 +4,8 @@
   "description": "Programa de fidelizacion Sandeli",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#9f1fee",
+  "background_color": "#f5f3f2",
+  "theme_color": "#f5f3f2",
   "icons": [
     {
       "src": "/images/logoIOS.png",
