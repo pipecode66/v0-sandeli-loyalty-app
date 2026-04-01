@@ -150,3 +150,45 @@ body {
 .floating-bottom-nav {
   bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 0.75rem);
 }
+
+@keyframes sandeli-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes sandeli-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(14px, -10px, 0) scale(1.05);
+  }
+}
+
+@keyframes sandeli-drift-reverse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-12px, 12px, 0) scale(0.96);
+  }
+}
+
+.animate-brand-float {
+  animation: sandeli-float 6s ease-in-out infinite;
+}
+
+.animate-brand-drift {
+  animation: sandeli-drift 9s ease-in-out infinite;
+}
+
+.animate-brand-drift-reverse {
+  animation: sandeli-drift-reverse 11s ease-in-out infinite;
+}
