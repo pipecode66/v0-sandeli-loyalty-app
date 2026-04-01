@@ -186,7 +186,7 @@ function ProductDetail({
 }
 
 export function RedeemablesTab() {
-  const { products, user, redeemProduct } = useApp()
+  const { products, user, redeemProduct, isIOSBrowser } = useApp()
   const [activeCategory, setActiveCategory] = useState("Todas")
   const [selectedProduct, setSelectedProduct] = useState<RedeemableProduct | null>(null)
   const [redeemResult, setRedeemResult] = useState<{
@@ -221,9 +221,10 @@ export function RedeemablesTab() {
   const todayStr = new Date().toISOString().split("T")[0]
   const redeemedToday = user?.lastRedeemDate === todayStr ? (user?.redeemedToday ?? 0) : 0
   const remainingToday = 60 - redeemedToday
+  const contentSpacingClass = isIOSBrowser ? "screen-safe-bottom" : "tab-safe-bottom"
 
   return (
-    <div className="tab-safe-bottom flex-1 overflow-y-auto px-5">
+    <div className={`${contentSpacingClass} flex-1 overflow-y-auto px-5`}>
       <h2 className="mb-1 text-xl font-bold text-foreground">Reclamables</h2>
       <p className="mb-5 text-sm text-muted-foreground">
         Canjea tus puntos por productos deliciosos y saludables

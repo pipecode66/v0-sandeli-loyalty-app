@@ -81,6 +81,7 @@ type MainTab = "home" | "history" | "redeemables"
 interface AppState {
   screen: AppScreen
   mainTab: MainTab
+  isIOSBrowser: boolean
   user: UserProfile | null
   notifications: Notification[]
   purchases: PurchaseRecord[]
@@ -238,6 +239,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [showIOSTutorial, setShowIOSTutorial] = useState(false)
   const [pendingLogin, setPendingLogin] = useState<PendingLoginState | null>(null)
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
+  const [isIOSBrowser, setIsIOSBrowser] = useState(false)
 
   const resolveToken = useCallback(() => accessToken || getAccessToken(), [accessToken])
 
@@ -428,7 +430,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (typeof document === "undefined") return
 
     const root = document.documentElement
-    if (isIOS() && !isStandalone()) {
+    const nextIsIOSBrowser = isIOS() && !isStandalone()
+    setIsIOSBrowser(nextIsIOSBrowser)
+
+    if (nextIsIOSBrowser) {
       root.dataset.iosBrowser = "true"
     } else {
       delete root.dataset.iosBrowser
@@ -550,6 +555,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     () => ({
       screen,
       mainTab,
+      isIOSBrowser,
       user,
       notifications,
       purchases,
@@ -572,6 +578,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [
       banners,
       dismissIOSTutorial,
+      isIOSBrowser,
       logout,
       mainTab,
       markNotificationRead,

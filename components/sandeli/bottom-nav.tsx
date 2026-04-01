@@ -10,7 +10,9 @@ const tabs = [
 ]
 
 export function BottomNav() {
-  const { mainTab, setMainTab } = useApp()
+  const { mainTab, setMainTab, isIOSBrowser } = useApp()
+
+  if (isIOSBrowser) return null
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 floating-bottom-nav z-40 px-4">

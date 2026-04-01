@@ -7,7 +7,7 @@ import { useApp } from "@/lib/app-context"
 import { getPresetAvatarEmoji } from "@/lib/preset-avatars"
 
 export function HomeTab() {
-  const { user, products, banners, setMainTab, logout } = useApp()
+  const { user, products, banners, setMainTab, logout, isIOSBrowser } = useApp()
   const [copied, setCopied] = useState(false)
 
   const redeemableNow = useMemo(
@@ -16,6 +16,8 @@ export function HomeTab() {
   )
 
   if (!user) return null
+
+  const contentSpacingClass = isIOSBrowser ? "screen-safe-bottom" : "tab-safe-bottom"
 
   const handleCopy = async () => {
     try {
@@ -40,7 +42,7 @@ export function HomeTab() {
   }
 
   return (
-    <div className="tab-safe-bottom flex-1 overflow-y-auto px-5">
+    <div className={`${contentSpacingClass} flex-1 overflow-y-auto px-5`}>
       <div className="mb-5 rounded-2xl bg-primary p-5">
         <div className="flex items-center gap-4">
           {user.avatarType === "custom" && user.avatar ? (

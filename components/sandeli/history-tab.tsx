@@ -21,7 +21,7 @@ function formatCurrency(value: number) {
 }
 
 export function HistoryTab() {
-  const { purchases, redemptions } = useApp()
+  const { purchases, redemptions, isIOSBrowser } = useApp()
 
   const totalPoints = purchases.reduce((sum, purchase) => sum + purchase.pointsEarned, 0)
 
@@ -44,8 +44,10 @@ export function HistoryTab() {
     return winner
   }, [redemptions])
 
+  const contentSpacingClass = isIOSBrowser ? "screen-safe-bottom" : "tab-safe-bottom"
+
   return (
-    <div className="tab-safe-bottom flex-1 overflow-y-auto px-5">
+    <div className={`${contentSpacingClass} flex-1 overflow-y-auto px-5`}>
       <h2 className="mb-1 text-xl font-bold text-foreground">Historial de compras</h2>
       <p className="mb-5 text-sm text-muted-foreground">
         Revisa tus facturas registradas y los puntos ganados.
