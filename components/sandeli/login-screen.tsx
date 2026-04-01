@@ -5,8 +5,6 @@ import Image from "next/image"
 import { useApp } from "@/lib/app-context"
 import { fetchPublicJson, setAccessToken } from "@/lib/public-api-client"
 import { Eye, EyeOff, Lock, Mail, Phone, ArrowRight, Loader2 } from "lucide-react"
-import { CountryCodeSelector } from "./country-code-selector"
-import { countryCodes, type CountryCode } from "@/lib/country-codes"
 
 type LoginResponse = {
   error?: string
@@ -17,15 +15,6 @@ type LoginResponse = {
   accessToken?: string
 }
 
-const defaultCountry = countryCodes.find((country) => country.code === "CO")!
-
-function normalizePhone(input: string, dialCode: string) {
-  const digits = input.replace(/[^\d]/g, "")
-  const dialDigits = dialCode.replace(/[^\d]/g, "")
-  if (digits.startsWith(dialDigits)) return digits
-  return `${dialDigits}${digits}`
-}
-
 export function LoginScreen() {
   const { setScreen, setPendingLogin, refreshData } = useApp()
   const [mode, setMode] = useState<"email" | "phone">("phone")
@@ -34,10 +23,9 @@ export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState<CountryCode>(defaultCountry)
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const isValidPhone = (phone: string) => /^\d{7,15}$/.test(phone)
+  const isValidPhone = (phone: string) => /^\d{10}$/.test(phone)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -61,13 +49,13 @@ export function LoginScreen() {
       identifier = normalizedEmail
       displayValue = normalizedEmail
     } else {
-      const normalizedPhone = normalizePhone(trimmed, selectedCountry.dial)
+      const normalizedPhone = trimmed.replace(/[^\d]/g, "")
       if (!isValidPhone(normalizedPhone)) {
-        setError("Ingresa un número telefónico válido.")
+        setError("Ingresa un número telefónico de 10 dígitos.")
         return
       }
       identifier = normalizedPhone
-      displayValue = `+${normalizedPhone}`
+      displayValue = normalizedPhone
     }
 
     setLoading(true)
@@ -135,7 +123,7 @@ export function LoginScreen() {
       <div className="safe-bottom rounded-t-3xl bg-secondary px-6 pb-10 pt-8">
         <h2 className="mb-1 text-xl font-semibold text-foreground">Iniciar sesión</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          Usa tu correo o teléfono y tu contraseña de 6 caracteres.
+          Usa tu correo o tu teléfono de 10 dígitos con tu contraseña.
         </p>
 
         <div className="mb-5 flex rounded-xl bg-background p-1">
@@ -175,19 +163,22 @@ export function LoginScreen() {
 
         <form onSubmit={handleSubmit}>
           {mode === "phone" ? (
-            <div className="mb-4 flex">
-              <CountryCodeSelector selected={selectedCountry} onSelect={setSelectedCountry} />
+            <div className="relative mb-4">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Phone className="h-5 w-5 text-muted-foreground" />
+              </div>
               <input
                 type="tel"
                 value={value}
                 onChange={(event) => {
-                  setValue(event.target.value.replace(/[^\d\s]/g, ""))
+                  setValue(event.target.value.replace(/[^\d]/g, "").slice(0, 10))
                   setError("")
                 }}
-                placeholder="300 000 0000"
-                className="w-full min-w-0 rounded-r-xl border border-border bg-background py-3.5 pl-4 pr-4 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="3000000000"
+                className="w-full rounded-xl border border-border bg-background py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/60 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 autoComplete="tel"
-                inputMode="tel"
+                inputMode="numeric"
+                maxLength={10}
               />
             </div>
           ) : (
