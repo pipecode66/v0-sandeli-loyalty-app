@@ -192,7 +192,7 @@ export function LoginScreen() {
           </div>
         </div>
 
-        <div className="-mt-5 animate-in fade-in-0 slide-in-from-bottom-6 duration-700 delay-150">
+        <div className="mt-4 animate-in fade-in-0 slide-in-from-bottom-6 duration-700 delay-150">
           <div className="screen-safe-bottom rounded-[2rem] border border-white/80 bg-background/92 px-5 pt-6 shadow-[0_22px_70px_-38px_rgba(26,27,29,0.5)] backdrop-blur-xl">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
