@@ -42,7 +42,7 @@
 }
 
 html[data-ios-browser='true'] {
-  --browser-ui-bottom-offset: 4rem;
+  --browser-ui-bottom-offset: 5.5rem;
 }
 
 @theme inline {
@@ -136,15 +136,15 @@ body {
 }
 
 .tab-safe-bottom {
-  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 6.5rem);
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 8.5rem);
 }
 
 .screen-safe-bottom {
-  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2.5rem);
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 3.75rem);
 }
 
 .sheet-safe-bottom {
-  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2rem);
+  padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2.75rem);
 }
 
 .floating-bottom-nav {

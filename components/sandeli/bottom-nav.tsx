@@ -13,8 +13,8 @@ export function BottomNav() {
   const { mainTab, setMainTab } = useApp()
 
   return (
-    <nav className="floating-bottom-nav sticky z-40 px-4">
-      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch rounded-[1.75rem] border border-border/80 bg-background/95 shadow-[0_18px_48px_-28px_rgba(26,27,29,0.55)] backdrop-blur-xl">
+    <nav className="pointer-events-none fixed inset-x-0 floating-bottom-nav z-40 px-4">
+      <div className="pointer-events-auto mx-auto flex w-full max-w-md items-stretch rounded-[1.75rem] border border-border/80 bg-background/95 shadow-[0_18px_48px_-28px_rgba(26,27,29,0.55)] backdrop-blur-xl">
         {tabs.map((tab) => {
           const isActive = mainTab === tab.key
           const Icon = tab.icon
