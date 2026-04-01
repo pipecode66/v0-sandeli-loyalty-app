@@ -17,7 +17,7 @@ export function HomeTab() {
 
   if (!user) return null
 
-  const contentSpacingClass = isIOSBrowser ? "screen-safe-bottom" : "tab-safe-bottom"
+  const contentSpacingClass = isIOSBrowser ? "home-safe-bottom" : "tab-safe-bottom"
 
   const handleCopy = async () => {
     try {

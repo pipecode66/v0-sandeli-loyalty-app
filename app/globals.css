@@ -143,6 +143,10 @@ body {
   padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 1.5rem);
 }
 
+.home-safe-bottom {
+  padding-bottom: calc(var(--safe-area-bottom) + 0.5rem);
+}
+
 .sheet-safe-bottom {
   padding-bottom: calc(var(--safe-area-bottom) + var(--browser-ui-bottom-offset) + 2.75rem);
 }
