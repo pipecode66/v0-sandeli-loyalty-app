@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useApp } from "@/lib/app-context"
 import { fetchPublicJson, setAccessToken } from "@/lib/public-api-client"
 import {
@@ -113,11 +114,23 @@ export function LoginScreen() {
         <div className="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,#ffffff_0%,rgba(255,255,255,0.55)_34%,transparent_74%)]" />
       </div>
 
-      <div className="safe-top relative flex min-h-full flex-1 flex-col justify-center px-5 py-6">
+      <div className="safe-top relative flex min-h-full flex-1 flex-col px-5 py-4 sm:justify-center sm:py-6">
         <div className="mx-auto w-full max-w-md animate-in fade-in-0 slide-in-from-bottom-6 duration-700">
-          <div className="screen-safe-bottom rounded-[2rem] border border-white/80 bg-background/92 px-5 pt-6 shadow-[0_22px_70px_-38px_rgba(26,27,29,0.5)] backdrop-blur-xl">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
+          <div className="screen-safe-bottom rounded-[2rem] border border-white/80 bg-background/92 px-5 py-5 shadow-[0_22px_70px_-38px_rgba(26,27,29,0.5)] backdrop-blur-xl">
+            <div className="mb-4">
+              <Image
+                src="/images/logo.png"
+                alt="Sandeli - Sano y Delicioso"
+                width={220}
+                height={84}
+                className="h-auto w-[148px] sm:w-[176px]"
+                style={{ width: "auto", height: "auto" }}
+                priority
+              />
+            </div>
+
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div className="flex-1">
                 <h2 className="text-xl font-semibold text-foreground">Iniciar sesion</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Usa tu correo o tu telefono de 10 digitos con tu contrasena.
@@ -261,7 +274,7 @@ export function LoginScreen() {
               </button>
             </form>
 
-            <div className="mt-5 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-center">
+            <div className="mt-4 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-center">
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Si es tu primer ingreso, despues de continuar podras crear tu contrasena
                 y dejar tu perfil listo en segundos.
