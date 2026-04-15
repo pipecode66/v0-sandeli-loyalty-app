@@ -1,14 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { Check, ChevronRight, Copy, Gift, LogOut, Star } from "lucide-react"
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { useApp } from "@/lib/app-context"
 import { getPresetAvatarEmoji } from "@/lib/preset-avatars"
 
 export function HomeTab() {
   const { user, products, banners, setMainTab, logout, isIOSBrowser } = useApp()
   const [copied, setCopied] = useState(false)
+  const [bannerApi, setBannerApi] = useState<CarouselApi>()
+  const [activeBanner, setActiveBanner] = useState(0)
 
   const redeemableNow = useMemo(
     () => products.filter((product) => product.pointsCost <= (user?.points || 0)),
@@ -40,6 +43,38 @@ export function HomeTab() {
     if (!url) return
     window.open(url, "_blank", "noopener,noreferrer")
   }
+
+  useEffect(() => {
+    if (!bannerApi) return
+
+    const syncBannerIndex = () => {
+      setActiveBanner(bannerApi.selectedScrollSnap())
+    }
+
+    syncBannerIndex()
+    bannerApi.on("select", syncBannerIndex)
+    bannerApi.on("reInit", syncBannerIndex)
+
+    return () => {
+      bannerApi.off("select", syncBannerIndex)
+      bannerApi.off("reInit", syncBannerIndex)
+    }
+  }, [bannerApi])
+
+  useEffect(() => {
+    if (!bannerApi || banners.length <= 1) return
+
+    const autoplay = window.setInterval(() => {
+      if (bannerApi.canScrollNext()) {
+        bannerApi.scrollNext()
+        return
+      }
+
+      bannerApi.scrollTo(0)
+    }, 4500)
+
+    return () => window.clearInterval(autoplay)
+  }, [bannerApi, banners.length])
 
   return (
     <div className={`${contentSpacingClass} flex-1 overflow-y-auto px-5`}>
@@ -100,34 +135,55 @@ export function HomeTab() {
       </div>
 
       {banners.length > 0 && (
-        <div className="mb-5 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {banners.map((banner) => (
-            <button
-              key={banner.id}
-              type="button"
-              onClick={() => openBanner(banner.redirectUrl)}
-              className="relative min-h-[120px] min-w-[280px] overflow-hidden rounded-2xl border bg-card"
-            >
-              {banner.mediaType === "image" ? (
-                <Image
-                  src={banner.mediaUrl}
-                  alt="Banner promocional"
-                  fill
-                  className="object-cover"
-                  sizes="280px"
+        <div className="mb-5">
+          <Carousel setApi={setBannerApi} opts={{ align: "start" }} className="w-full">
+            <CarouselContent className="ml-0">
+              {banners.map((banner) => (
+                <CarouselItem key={banner.id} className="pl-0">
+                  <button
+                    type="button"
+                    onClick={() => openBanner(banner.redirectUrl)}
+                    className="relative block aspect-[3/1] min-h-[128px] w-full overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-sm"
+                  >
+                    {banner.mediaType === "image" ? (
+                      <Image
+                        src={banner.mediaUrl}
+                        alt="Banner promocional"
+                        fill
+                        className="object-cover object-center scale-[1.02]"
+                        sizes="(max-width: 768px) calc(100vw - 40px), 640px"
+                      />
+                    ) : (
+                      <video
+                        src={banner.mediaUrl}
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                        className="h-full w-full scale-[1.02] object-cover object-center"
+                      />
+                    )}
+                  </button>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+
+          {banners.length > 1 && (
+            <div className="mt-3 flex items-center justify-center gap-2">
+              {banners.map((banner, index) => (
+                <button
+                  key={banner.id}
+                  type="button"
+                  onClick={() => bannerApi?.scrollTo(index)}
+                  aria-label={`Ir al banner ${index + 1}`}
+                  className={`h-2.5 rounded-full transition-all ${
+                    activeBanner === index ? "w-7 bg-primary" : "w-2.5 bg-primary/25"
+                  }`}
                 />
-              ) : (
-                <video
-                  src={banner.mediaUrl}
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
-              )}
-            </button>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       )}
 
